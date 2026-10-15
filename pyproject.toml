@@ -1,0 +1,31 @@
+[project]
+name = "voice-studio"
+version = "0.1.0"
+description = "Config-driven multi-agent TTS pipeline."
+requires-python = ">=3.11"
+
+dependencies = [
+    "langchain>=0.3",
+    "langchain-core>=0.3",
+    "langgraph>=0.2",
+    "pydantic>=2.5",
+    "python-dotenv>=1.0",
+    "openai>=1.40",
+    "groq>=0.11",
+    "deepgram-sdk>=3.0",
+    "google-genai>=0.8",
+    "edge-tts>=6.1",
+]
+
+[project.optional-dependencies]
+dev = ["ruff", "pytest", "pytest-asyncio"]
+
+[project.scripts]
+voice-studio = "voice_studio.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["voice_studio*"]
