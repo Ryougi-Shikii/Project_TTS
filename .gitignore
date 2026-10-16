@@ -5,4 +5,5 @@ output/
 *.egg-info/
 .venv/
 venv/
-out/
+out*/
+stories/

@@ -1,0 +1,16 @@
+voice-studio/
+├── voice_studio/
+│   ├── __init__.py
+│   ├── __main__.py          # CLI entry (python -m voice_studio)
+│   ├── config.py            # everything you edit: models, chain, families
+│   ├── schemas.py           # pydantic models
+│   ├── story.py             # TOML load/save
+│   ├── tts.py               # base + 5 providers + registry (one file)
+│   ├── agents.py            # script/voice/orchestrator + tools (one file)
+│   └── media.py             # ffmpeg helpers
+├── stories/                 # 10 starter stories
+│   ├── *.toml
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md

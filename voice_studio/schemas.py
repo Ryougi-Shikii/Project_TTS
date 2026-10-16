@@ -4,12 +4,12 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class Pause(BaseModel):
-    after_word: str = Field(..., description="Word after which the pause occurs")
+    after_word: str
     ms: int = Field(..., ge=0, le=5000)
 
 
 class SpeechLine(BaseModel):
-    id: str = Field(..., description="Stable id, e.g. 'L1', 'L2'")
+    id: str
     speaker: str
     text: str
     emotion: str = "neutral"
@@ -19,8 +19,7 @@ class SpeechLine(BaseModel):
     volume: float = Field(0.0, ge=-50.0, le=50.0)
     pauses: list[Pause] = Field(default_factory=list)
     emphasis: list[str] = Field(default_factory=list)
-    voice_hint: Optional[str] = None
-    visual_cue: Optional[str] = None       # reserved for the video stage
+    visual_cue: Optional[str] = None
 
 
 class Script(BaseModel):
@@ -36,6 +35,30 @@ class Script(BaseModel):
         if len(ids) != len(set(ids)):
             raise ValueError("SpeechLine ids must be unique")
         return lines
+
+
+class SpeakerVoice(BaseModel):
+    speaker: str
+    family: str = Field(..., description="Family name from list_voice_families")
+    rationale: str = Field(..., description="One concrete sentence")
+
+
+class VoiceCast(BaseModel):
+    assignments: list[SpeakerVoice]
+
+    def as_lookup(self) -> dict[str, str]:
+        return {a.speaker.lower(): a.family for a in self.assignments}
+
+
+class ScriptResult(BaseModel):
+    script: Script
+    story_toml: str = Field(
+        ...,
+        description=(
+            "A complete TOML document with title, description, and brief. "
+            "Must be parseable by tomllib.loads(). Do NOT include a [voices] block."
+        ),
+    )
 
 
 class WordTiming(BaseModel):
