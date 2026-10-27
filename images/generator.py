@@ -33,16 +33,29 @@ _gradio_client = None
 
 
 def get_animagine_client():
-    """Connect to Animagine XL 3.1 Space on Hugging Face (Uncensored Anime / NSFW friendly)."""
+    """Connect to Animagine XL 3.1 via Private Google Colab (Unlimited) or HF ZeroGPU Space (90s Free Tier)."""
     global _gradio_client
     if _gradio_client is None and Client is not None:
+        # 1. Check for private Google Colab GPU backend (Unlimited mode)
+        colab_url = os.environ.get("ANIMAGINE_URL") or os.environ.get("COLAB_GRADIO_URL")
+        if colab_url:
+            colab_url = colab_url.strip().rstrip("/")
+            try:
+                logger.info(f"Connecting to Private Google Colab GPU Backend (Unlimited Mode): {colab_url} ...")
+                _gradio_client = Client(colab_url)
+                logger.info(f"✔ Connected to Colab GPU Backend successfully! (Zero quota limits)")
+                return _gradio_client
+            except Exception as e:
+                logger.warning(f"Failed to connect to Colab URL ({colab_url}): {e}. Falling back to HF Space.")
+
+        # 2. Public Hugging Face ZeroGPU Space (Standard 90s daily quota mode)
         token = os.environ.get("huggingface_colab") or os.environ.get("HF_TOKEN")
         try:
             if token:
-                logger.info("Connecting to Animagine XL 3.1 Space (with Hugging Face token)...")
+                logger.info("Connecting to Animagine XL 3.1 Space (90s Free ZeroGPU Tier, with HF token)...")
                 _gradio_client = Client("cagliostrolab/animagine-xl-3.1", token=token)
             else:
-                logger.info("Connecting to Animagine XL 3.1 Space (anonymous connection)...")
+                logger.info("Connecting to Animagine XL 3.1 Space (90s Free ZeroGPU Tier, anonymous)...")
                 _gradio_client = Client("cagliostrolab/animagine-xl-3.1")
             logger.info("✔ Connected to Animagine XL 3.1 Space successfully.")
         except Exception as e:
@@ -76,7 +89,7 @@ def _create_cinematic_fallback(prompt: str, out_path: Path):
         small_font = font
 
     draw.text((100, VIDEO_HEIGHT // 2 - 40), f"Scene: {summary_text}", fill=(200, 220, 255), font=font)
-    draw.text((100, VIDEO_HEIGHT // 2 + 20), "(Visual Render - Connect HF Pro or API key for continuous diffusion)", fill=(120, 140, 180), font=small_font)
+    draw.text((100, VIDEO_HEIGHT // 2 + 20), "(Visual Render - Run animagine_colab.ipynb or connect HF Pro for continuous diffusion)", fill=(120, 140, 180), font=small_font)
     img.save(out_path, format="JPEG", quality=95)
 
 
@@ -167,12 +180,22 @@ def generate_single_image(
                     api_name='/run'
                 )
                 if res and isinstance(res, (tuple, list)) and len(res) > 0 and len(res[0]) > 0:
-                    temp_p = res[0][0].get("image")
+                    img_item = res[0][0]
+                    temp_p = None
+                    if isinstance(img_item, dict):
+                        temp_p = img_item.get("image") or img_item.get("path") or img_item.get("name")
+                    elif isinstance(img_item, str):
+                        temp_p = img_item
+                    elif isinstance(img_item, (tuple, list)) and len(img_item) > 0:
+                        temp_p = img_item[0]
+
                     if temp_p and Path(temp_p).exists():
                         shutil.copy(temp_p, out_path)
                         _ensure_1080p(out_path)
                         logger.info(f"✔ Animagine XL 3.1 generated image in {time.time()-t0:.2f}s -> {out_path.resolve()}")
                         return out_path
+                    else:
+                        logger.warning(f"Extracted image path '{temp_p}' not found or invalid from res: {res}")
             except Exception as e:
                 err_msg = str(e)
                 if "ZeroGPU quota" in err_msg:

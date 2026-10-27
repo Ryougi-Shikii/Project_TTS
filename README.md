@@ -58,6 +58,10 @@ python images/main.py "1girl, hatsune miku in sexy outfit, 16:9, masterpiece"
 # Output -> images/output/img_<timestamp>.jpg
 ```
 
+> **Dual Mode Image Generation:**
+> - **Default Mode (90s Free ZeroGPU Tier)**: Works out of the box with zero setup using Hugging Face's public space.
+> - **Unlimited Mode (Free Google Colab T4 GPU)**: Open [`animagine_colab.ipynb`](animagine_colab.ipynb) on Google Colab, copy the generated `.gradio.live` link, and set `ANIMAGINE_URL="https://xxxx.gradio.live"` in `.env` for unlimited generations with zero daily quota limits!
+
 ### 4. `video/` (Cinematic Compositor & AI Video)
 Animates images with Ken Burns camera movement, styled subtitles, and 44.1kHz stereo audio:
 ```bash
